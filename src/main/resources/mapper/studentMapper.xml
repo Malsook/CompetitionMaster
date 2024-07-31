@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hzu.competition_master.mapper.StudentMapper">
+    <!-- 多条件增加 -->
+    <insert id="addByStudent" parameterType="Student">
+        INSERT INTO Students (Account, Password, Name, ClazzName, Email, Number)
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="account != null">#{account},</if>
+            <if test="account == null">NULL,</if>
+            <if test="password != null">#{password},</if>
+            <if test="password == null">NULL,</if>
+            <if test="name != null">#{name},</if>
+            <if test="name == null">NULL,</if>
+            <if test="clazzName != null">#{clazzName},</if>
+            <if test="clazzName == null">NULL,</if>
+            <if test="email != null">#{email},</if>
+            <if test="email == null">NULL,</if>
+            <if test="number != null">#{number},</if>
+            <if test="number == null">NULL,</if>
+        </trim>
+    </insert>
+
+    <!-- 多条件删除 -->
+    <delete id="deleteByStudent" parameterType="Student">
+        DELETE FROM Students
+        <where>
+            <if test="id != 0">AND ID = #{id}</if>
+            <if test="account != null">AND Account = #{account}</if>
+            <if test="name != null">AND Name = #{name}</if>
+            <if test="clazzName != null">AND ClazzName = #{clazzName}</if>
+            <if test="email != null">AND Email = #{email}</if>
+            <if test="number != null">AND Number = #{number}</if>
+        </where>
+    </delete>
+
+    <!-- 根据Id多条件更新 -->
+    <update id="updateById" parameterType="Student">
+        UPDATE Students
+        <set>
+            <if test="account != null">Account = #{account},</if>
+            <if test="password != null">Password = #{password},</if>
+            <if test="name != null">Name = #{name},</if>
+            <if test="clazzName != null">ClazzName = #{clazzName},</if>
+            <if test="email != null">Email = #{email},</if>
+            <if test="number != null">Number = #{number},</if>
+        </set>
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 多条件查询 -->
+    <select id="findByStudent" parameterType="Student" resultType="Student">
+        SELECT * FROM Students
+        <where>
+            <if test="id != 0">AND ID = #{id}</if>
+            <if test="account != null">AND Account = #{account}</if>
+            <if test="name != null">AND Name = #{name}</if>
+            <if test="clazzName != null">AND ClazzName = #{clazzName}</if>
+            <if test="email != null">AND Email = #{email}</if>
+            <if test="number != null">AND Number = #{number}</if>
+        </where>
+    </select>
+
+    <!-- 多条件模糊查询 -->
+    <select id="findByStudentLike" parameterType="Student" resultType="Student">
+        SELECT * FROM Students
+        <where>
+            <if test="id != 0">AND ID = #{id}</if>
+            <if test="account != null">AND Account LIKE CONCAT('%', #{account}, '%')</if>
+            <if test="name != null">AND Name LIKE CONCAT('%', #{name}, '%')</if>
+            <if test="clazzName != null">AND ClazzName LIKE CONCAT('%', #{clazzName}, '%')</if>
+            <if test="email != null">AND Email LIKE CONCAT('%', #{email}, '%')</if>
+            <if test="number != null">AND Number LIKE CONCAT('%', #{number}, '%')</if>
+        </where>
+    </select>
+
+
+</mapper>

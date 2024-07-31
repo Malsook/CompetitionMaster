@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hzu.competition_master.mapper.ClazzMapper">
+    <!-- 多条件增加 -->
+    <insert id="addByClazz" parameterType="Clazz">
+        INSERT INTO Classes (ClazzName)
+        VALUES (#{clazzName})
+    </insert>
+
+    <!-- 多条件删除 -->
+    <delete id="deleteByClazz" parameterType="Clazz">
+        DELETE FROM Classes
+        <where>
+            <if test="id != 0">AND ID = #{id}</if>
+            <if test="clazzName != null">AND ClazzName = #{clazzName}</if>
+        </where>
+    </delete>
+
+    <!-- 根据Id多条件更新 -->
+    <update id="updateById" parameterType="Clazz">
+        UPDATE Classes
+        <set>
+            <if test="clazzName != null">ClazzName = #{clazzName},</if>
+        </set>
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 多条件查询 -->
+    <select id="findByClazz" parameterType="Clazz" resultType="Clazz">
+        SELECT *
+        FROM Classes
+        <where>
+            <if test="id != 0">AND ID = #{id}</if>
+            <if test="clazzName != null">AND ClazzName = #{clazzName}</if>
+        </where>
+        ORDER BY ClazzName
+    </select>
+
+    <!-- 多条件模糊查询 -->
+    <select id="findByClazzLike" parameterType="Clazz" resultType="Clazz">
+        SELECT *
+        FROM Classes
+        <where>
+            <if test="clazzName != null">ClazzName LIKE CONCAT('%', #{clazzName}, '%')</if>
+        </where>
+    </select>
+</mapper>

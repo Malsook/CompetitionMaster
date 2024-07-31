@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <title>竞赛管理系统</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/css/default.css}"/>
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/default/easyui.css}"/>
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/icon.css}"/>
+  <script type="text/javascript" th:src="@{/easyui/jquery.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.easyui.min.js}"></script>
+  <script type="text/javascript" th:src='@{/easyui/js/outlook2.js}'></script>
+  <script type="text/javascript" th:inline="javascript">
+    var usertype = [[${session.USERTYPE}]];
+    if (usertype == "ADMIN") {
+      var _menus = {
+        "menus": [
+          {
+            "menuid": "1", "icon": "", "menuname": "学生信息",
+            "menus": [
+              {
+                "menuid": "11",
+                "menuname": "学生列表",
+                "icon": "icon-user-student",
+                "url": "[(@{/student/list})]"
+              }, {
+                "menuid": "12",
+                "menuname": "班级列表",
+                "icon": "icon-user-student",
+                "url": "[(@{/clazz/list})]"
+              }
+            ]
+          },
+          {
+            "menuid": "2", "icon": "", "menuname": "教师信息",
+            "menus": [
+              {
+                "menuid": "21",
+                "menuname": "教师列表",
+                "icon": "icon-user-teacher",
+                "url": "[(@{/teacher/list})]"
+              },
+            ]
+          },
+          {
+            "menuid": "3", "icon": "", "menuname": "竞赛信息",
+            "menus": [
+              {
+                "menuid": "31",
+                "menuname": "竞赛列表",
+                "icon": "icon-house",
+                "url": "[(@{/competition/list})]"
+              }
+            ],
+          },
+          {
+            "menuid": "4", "icon": "", "menuname": "奖项信息",
+            "menus": [
+              {
+                "menuid": "41",
+                "menuname": "获奖信息",
+                "icon": "icon-book-open",
+                "url": "[(@{/prize/list})]"
+              },
+              {
+                "menuid": "42",
+                "menuname": "奖项审核",
+                "icon": "icon-book-open",
+                "url": "[(@{/prize/process/list})]"
+              }
+            ]
+          }
+        ]
+      };
+    }
+    if (usertype == "TEACHER") {
+      var _menus = {
+        "menus": [
+          {
+            "menuid": "1", "icon": "", "menuname": "学生信息",
+            "menus": [
+              {
+                "menuid": "11",
+                "menuname": "学生列表",
+                "icon": "icon-user-student",
+                "url": "[(@{/student/list})]"
+              }, {
+                "menuid": "12",
+                "menuname": "班级列表",
+                "icon": "icon-user-student",
+                "url": "[(@{/clazz/list})]"
+              }
+            ]
+          },
+          {
+            "menuid": "3", "icon": "", "menuname": "竞赛信息",
+            "menus": [
+              {
+                "menuid": "31",
+                "menuname": "竞赛列表",
+                "icon": "icon-house",
+                "url": "[(@{/competition/list})]"
+              }
+            ],
+          },
+          {
+            "menuid": "4", "icon": "", "menuname": "奖项信息",
+            "menus": [
+              {
+                "menuid": "41",
+                "menuname": "获奖信息",
+                "icon": "icon-book-open",
+                "url": "[(@{/prize/list})]"
+              },
+              {
+                "menuid": "42",
+                "menuname": "奖项审核",
+                "icon": "icon-book-open",
+                "url": "[(@{/prize/process/list})]"
+              }
+            ]
+          },
+          {
+            "menuid": "5", "icon": "", "menuname": "个人中心",
+            "menus": [
+              {
+                "menuid": "51",
+                "menuname": "个人信息",
+                "icon": "icon-set",
+                "url": "[(@{/person/teacher})]"
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+    if (usertype == "STUDENT") {
+      var _menus = {
+        "menus": [
+          {
+            "menuid": "3", "icon": "", "menuname": "竞赛信息",
+            "menus": [
+              {
+                "menuid": "31",
+                "menuname": "竞赛列表",
+                "icon": "icon-house",
+                "url": "[(@{/competition/list})]"
+              }
+            ],
+          },
+          {
+            "menuid": "4", "icon": "", "menuname": "奖项信息",
+            "menus": [
+              {
+                "menuid": "41",
+                "menuname": "获奖信息",
+                "icon": "icon-book-open",
+                "url": "[(@{/prize/list})]"
+              }
+            ]
+          },
+          {
+            "menuid": "5", "icon": "", "menuname": "个人中心",
+            "menus": [
+              {
+                "menuid": "51",
+                "menuname": "个人信息",
+                "icon": "icon-set",
+                "url": "[(@{/person/student})]"
+              }
+            ]
+          }
+        ]
+      };
+    }
+  </script>
+</head>
+
+<body class="easyui-layout" style="overflow-y: hidden" scroll="no">
+
+<div region="north" split="true" border="false" style="overflow: hidden; height: 30px;
+        background: url(images/layout-browser-hd-bg.gif) #7f99be repeat-x center 50%;
+        line-height: 20px;color: #fff; font-family: Verdana, 微软雅黑,黑体">
+        <span style="float:right; padding-right:20px;" class="head">
+            <span style="color:red; font-weight:bold;" th:text="${session.USERINFO.getName()}">&nbsp</span>
+            您好&nbsp;&nbsp;&nbsp;
+            <a th:href="@{/logout}" id="loginOut">安全退出</a>
+        </span>
+  <span style="padding-left:10px; font-size: 16px; ">竞赛管理系统</span>
+</div>
+
+<div region="south" split="true" style="height: 30px; background: #D2E0F2; ">
+  <div class="footer">1198775229@qq.com</div>
+</div>
+
+<div region="west" hide="true" split="true" title="导航菜单" style="width:180px;" id="west">
+  <div id="nav" class="easyui-accordion" fit="true" border="false">
+    <!--  导航内容 -->
+  </div>
+</div>
+
+<div id="mainPanle" region="center" style="background: #eee; overflow-y:hidden">
+  <div id="tabs" class="easyui-tabs" fit="true" border="false" th:include="system/welcome :: welcome"/>
+</div>
+
+
+</body>
+</html>

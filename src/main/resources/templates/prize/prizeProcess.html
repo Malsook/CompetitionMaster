@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>奖项审核</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/default/easyui.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/icon.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/css/demo.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/fangda.css}">
+  <script type="text/javascript" th:src="@{/easyui/jquery.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.easyui.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.serializejson.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/fangda.js}"></script>
+  <script type="text/javascript" th:src="@{/ajaxConfig.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/js/validateExtends.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/datagrid-detailview.js}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    // 页面加载完成后进行初始化
+    $(function () {
+      //datagrid初始化
+      $('#dataList').datagrid({
+        title: '审核列表',
+        iconCls: 'icon-more', //图标
+        border: true,
+        collapsible: false, //是否可折叠的
+        fit: true, //自动大小
+        method: "get",
+        url: "[(@{/prize})]",
+        idField: 'id',
+        pagination: true, //分页控件
+        rownumbers: true, //显示行号
+        sortName: 'competitionName',
+        sortOrder: 'DESC',
+        remoteSort: false,
+        view: detailview,
+        columns: [[
+          {field: 'chk', checkbox: true, width: 50},
+          {field: 'id', title: 'ID', width: 50, sortable: true, hidden: true},
+          {field: 'competitionName', title: '竞赛名称', width: 200, sortable: true},
+          {field: 'description', title: '竞赛描述', width: 200, hidden: true},
+          {field: 'studentName', title: '学生名称', width: 200, sortable: true},
+          {field: 'teacherName', title: '指导老师名称', width: 150, sortable: true},
+          {field: 'status', title: '审核状态', width: 150, sortable: true},
+          {field: 'certificatePath', title: '证书', width: 150, hidden: true},
+          {field: 'result', title: '奖项', width: 150, sortable: true},
+          {field: 'participationDate', title: '参赛时间', width: 150, sortable: true}//
+        ]],
+        detailFormatter: function (index, row) {
+          return '<table style="border:0;"><tr>' +
+              '<td rowspan=2 style="border:0"><div class="over"></div><div class="logoImg amplifyImg"><img src= "' + "[(@{/})]" + row.certificatePath + '" style="height:50px;"></div></td>' +
+              '<td style="border:0;color: blue; width: auto; text-align: right;">' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;竞赛名称: </p>' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;学生名称: </p>' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;教师名称: </p>' +
+              '</td>' +
+              '<td style="border:0; width: auto;">' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;' + row.competitionName + '</p>' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;' + row.studentName + '</p>' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;' + row.teacherName + '</p>' +
+              '</td>' +
+              '<td style="border:0;color: blue; width: auto; text-align: right;">' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;奖项: </p>' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;参赛时间: </p>' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;审核状态: </p>' +
+              '</td>' +
+              '<td style="border:0; width: auto;">' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;' + row.result + '</p>' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;' + row.participationDate + '</p>' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;' + row.status + '</p>' +
+              '</td>' +
+              '<td style="border:0; padding-left: 15px; text-align: left; color: blue; vertical-align: top; width: auto; text-align: right;">' +
+              '<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;竞赛描述: </p>' +
+              '<td style="border:0; padding-left: 15px; text-align: left; vertical-align: top; width: 500px;">' +
+              '<p>' + row.description + '</p>' +
+              '</tr>' +
+              '</table>';
+        },
+        toolbar: "#toolbar",// 工具栏
+        onLoadSuccess: function () {// 重新请求时取消所有勾选
+          $("#dataList").datagrid("clearChecked");
+        },
+        onDblClickCell: function (index, field, value) {
+          if ($(this).datagrid("getExpander", (index))[0].getAttribute("class") == "datagrid-row-expander datagrid-row-expand") {
+            $(this).datagrid("expandRow", index);
+          } else {
+            $(this).datagrid("collapseRow", index);
+          }
+        }
+      });
+
+
+      //设置分页控件
+      $('#dataList').datagrid('getPager').pagination({
+        pageSize: 10,//每页显示的记录条数，默认为10
+        pageList: [10, 20, 30, 50, 100],//可以设置每页记录条数的列表
+        beforePageText: '第',//页数文本框前显示的汉字
+        afterPageText: '页    共 {pages} 页',
+        displayMsg: '当前显示 {from} - {to} 条记录   共 {total} 条记录'
+      });
+
+      //搜索按钮监听事件
+      $("#search-btn").click(function () {
+        $('#dataList').datagrid('load', {
+          competitionName: $('#competitionName').val(),
+          studentName: $('#studentName').val(),
+          teacherName: $('#teacherName').val(),
+          result: $('#result').val(),
+          status: $('#status').val()
+        });
+      });
+
+      // 添加按钮点击事件设置
+      $("#add").click(function () {
+        $("#addDialog").dialog("open");
+      });
+
+      // 修改按钮点击事件设置
+      $("#edit").click(function () {
+        var selectRows = $("#dataList").datagrid("getSelections");
+        if (selectRows.length != 1) {
+          $.messager.alert("消息提醒", "请选择一条数据进行操作!", "warning");
+        } else {
+          $("#editDialog").dialog("open");
+        }
+      });
+
+      // 删除按钮点击事件设置
+      $("#delete").click(function () {
+        var selectRows = $("#dataList").datagrid("getSelections");
+        if (selectRows == 0) {
+          $.messager.alert("消息提醒", "请选择数据进行删除!", "warning");
+        } else {
+          $.messager.confirm("消息提醒", "将删除该奖项审核记录，确认继续？", function (r) {
+            var requestJson = [];
+            $.each(selectRows, function (i, n) {
+              let obj = {
+                id: n.id
+              };
+              requestJson.push(obj);
+            });
+            if (r) {
+              $.ajax({
+                type: "delete",
+                url: "[(@{/prize})]",
+                data: JSON.stringify(requestJson),
+                contentType: "application/json",
+                processData: false,
+                success: function () {
+                  $.messager.alert("消息提醒", "删除成功!", "info");
+                  //刷新表格
+                  $("#dataList").datagrid("reload");
+                  // 取消勾选
+                  $("#dataList").datagrid("clearChecked");
+                }
+              });
+            }
+          });
+        }
+      });
+
+      // 设置添加窗口
+      $("#addDialog").dialog({
+        title: "申请奖项",
+        width: 650,
+        height: 460,
+        iconCls: "icon-add",
+        modal: true,
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        draggable: true,
+        closed: true,
+        buttons: [{
+          text: '申请',
+          plain: true,
+          iconCls: 'icon-user_add',
+          handler: function () {
+            if (!$("#addForm").form("validate")) {
+              $.messager.alert("消息提醒", "请检查你输入的数据!", "warning");
+              return;
+            }
+            $.ajax({
+              type: "put",
+              url: "[(@{/prize})]",
+              data: JSON.stringify($("#addForm").serializeJSON()),
+              contentType: "application/json",
+              success: function () {
+                $.messager.alert("消息提醒", "添加成功!", "info");
+                // 关闭窗口
+                $("#addDialog").dialog("close");
+                // 清空原表格数据
+                $("#addForm").form("clear");
+                // 刷新表格数据
+                $('#dataList').datagrid("reload");
+                // 取消勾选
+                $("#dataList").datagrid("clearChecked");
+              }
+            });
+          }
+        },
+          {
+            text: '重置',
+            plain: true,
+            iconCls: 'icon-reload',
+            handler: function () {
+              $("#addForm").form("clear");
+              $('#preview').hide();
+            }
+          }],
+        onBeforeOpen: function () {
+          $("#add_certificate").filebox({
+            buttonText: "选择图像",
+            required: true,
+            onChange: function () {
+              if ($(this).context.ownerDocument.activeElement.files != null) {
+                let file = $(this).context.ownerDocument.activeElement.files[0];
+                let form = new FormData();
+                form.append("file", file);
+                $.ajax({
+                  url: "[(@{/prize/uploadCertificate})]",
+                  type: "put",
+                  data: form,
+                  processData: false,
+                  contentType: false,
+                  success: function (result) {
+                    $("#add_certificatePath").val(result);
+                    if (file) {
+                      let reader = new FileReader();
+                      reader.onload = function (e) {
+                        $('#preview').attr('src', e.target.result).show();
+                      }
+                      reader.readAsDataURL(file);
+                    } else {
+                      $('#preview').hide();
+                    }
+                  }
+                });
+              }
+            }
+          });
+        }
+      });
+
+      // 设置修改窗口
+      $("#editDialog").dialog({
+        title: "修改奖项信息",
+        width: 650,
+        height: 460,
+        iconCls: "icon-edit",
+        modal: true,
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        draggable: true,
+        closed: true,
+        buttons: [{
+          text: '确认修改',
+          plain: true,
+          iconCls: 'icon-user_add',
+          handler: function () {
+            if (!$("#editForm").form("validate")) {
+              $.messager.alert("消息提醒", "请检查你输入的数据!", "warning");
+              return;
+            }
+            $.ajax({
+              type: "post",
+              url: "[(@{/prize})]",
+              data: JSON.stringify($("#editForm").serializeJSON()),
+              contentType: "application/json",
+              processData: false,
+              success: function () {
+                $.messager.alert("消息提醒", "修改成功!", "info");
+                // 关闭窗口
+                $("#editDialog").dialog("close");
+                // 清空表格数据
+                $("#editForm").form("clear");
+                // 刷新表格数据
+                $("#dataList").datagrid("reload");
+                // 取消勾选
+                $("#dataList").datagrid("clearChecked");
+              }
+            });
+          }
+        },
+          {
+            text: '重置',
+            plain: true,
+            iconCls: 'icon-reload',
+            handler: function () {
+              // 清空表格数据
+              $("#editForm").form("clear");
+            }
+          }, {
+            text: '通过',
+            plain: true,
+            iconCls: 'icon-reload',
+            handler: function () {
+              $.messager.confirm("消息提醒", "请再次确认通过", function (r) {
+                $("#edit_status").val("已通过");
+                $.ajax({
+                  type: "post",
+                  url: "[(@{/prize})]",
+                  data: JSON.stringify($("#editForm").serializeJSON()),
+                  contentType: "application/json",
+                  processData: false,
+                  success: function () {
+                    $.messager.alert("消息提醒", "已通过!", "info");
+                    // 关闭窗口
+                    $("#editDialog").dialog("close");
+                    // 刷新表格数据
+                    $("#dataList").datagrid("reload");
+                    // 取消勾选
+                    $("#dataList").datagrid("clearChecked");
+                  }
+                });
+              })
+            }
+          }, {
+            text: '驳回',
+            plain: true,
+            iconCls: 'icon-reload',
+            handler: function () {
+              $.messager.confirm("消息提醒", "请再次确认驳回", function (r) {
+                $("#edit_status").val("已驳回");
+                $.ajax({
+                  type: "post",
+                  url: "[(@{/prize})]",
+                  data: JSON.stringify($("#editForm").serializeJSON()),
+                  contentType: "application/json",
+                  processData: false,
+                  success: function () {
+                    $.messager.alert("消息提醒", "已驳回!", "info");
+                    // 关闭窗口
+                    $("#editDialog").dialog("close");
+                    // 刷新表格数据
+                    $("#dataList").datagrid("reload");
+                    // 取消勾选
+                    $("#dataList").datagrid("clearChecked");
+                  }
+                });
+              })
+            }
+          }],
+        onBeforeOpen: function () {
+          // 加载原数据
+          var selectRow = $("#dataList").datagrid("getSelected");
+          $("#edit_id").val(selectRow.id);
+          $("#edit_status").val(selectRow.status);
+          $("#edit_competitionName").textbox('setValue', selectRow.competitionName);
+          $("#edit_studentName").textbox('setValue', selectRow.studentName);
+          $("#edit_teacherName").textbox('setValue', selectRow.teacherName);
+          $("#edit_result").textbox('setValue', selectRow.result);
+          $("#edit_participationDate").textbox('setValue', selectRow.participationDate);
+          $('#edit_preview').attr('src', "[(@{/})]" + selectRow.certificatePath);
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+<!-- 数据列表 -->
+<table id="dataList" cellspacing="0" cellpadding="0">
+
+</table>
+<!-- 工具栏 -->
+<div id="toolbar" style="display: flex; flex-direction: row; gap: 0px;">
+  <div style="float: left;">
+    <a id="add" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-add',plain:true">添加</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div style="float: left;">
+    <a id="delete" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-some-delete',plain:true">删除</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div style="float: left;">
+    <a id="edit" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-edit',plain:true">修改|审核</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div style="float: left;margin-top:4px;">
+    &nbsp;&nbsp;竞赛名称：<input id="competitionName" class="easyui-textbox" name="competitionName"/>
+  </div>
+  <div style="float: left;margin-top:4px;">
+    &nbsp;&nbsp;学生名称：<input id="studentName" class="easyui-textbox" name="studentName"/>
+  </div>
+  <div style="float: left;margin-top:4px;">
+    &nbsp;&nbsp;教师名称：<input id="teacherName" class="easyui-textbox" name="teacherName"/>
+  </div>
+  <div style="float: left;margin-top:4px;">
+    &nbsp;&nbsp;奖项：<input id="result" class="easyui-textbox" name="result"/>
+  </div>
+  <div style="float: left;margin-top:4px;">
+    &nbsp;&nbsp;审核状态：<input id="status" class="easyui-textbox" name="status"/>
+  </div>
+  <div style="margin-top:2px;">
+    <a id="search-btn" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-search',plain:true">搜索
+    </a>
+  </div>
+</div>
+
+<!-- 添加窗口 -->
+<div id="addDialog" style="padding: 10px">
+  <form id="addForm" method="post" enctype="multipart/form-data">
+    <table cellpadding="8">
+      <tr>
+        <td>竞赛名称:</td>
+        <td><input id="add_competitionName" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="competitionName" name="competitionName"
+                   data-options="required:true, missingMessage:'请填写竞赛名称'"/></td>
+      </tr>
+      <tr>
+        <td>学生名称:</td>
+        <td><input id="add_studentName" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   name="studentName"
+                   validType="name"
+                   data-options="required:true, missingMessage:'请填写学生名称'"
+        /></td>
+      </tr>
+      <tr>
+        <td>指导教师名称:</td>
+        <td>
+          <input id="add_teacherName" class="easyui-textbox" style="width: 200px; height: 30px;" type="text"
+                 name="teacherName"
+                 validType="name"
+                 data-options="required:true, missingMessage:'请填写指导教师名称'"/>
+        </td>
+      </tr>
+      <tr>
+        <td>证书:</td>
+        <td>
+          <input id="add_certificate" name="certificate" class="easyui-filebox" style="width: 58px;"data-options="required:true, missingMessage:'请上传证书'">
+          <input id="add_certificatePath" name="certificatePath" type="text" style="display: none">
+          <img id="preview" style="max-width: 200px; max-height: 200px; width: auto; height: auto;"/>
+        </td>
+      </tr>
+      <tr>
+        <td>奖项:</td>
+        <td><input id="add_result" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   name="result" /></td>
+      </tr>
+      <tr>
+        <td>参赛时间:</td>
+        <td><input id="add_participationDate" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="date" name="participationDate"/></td>
+      </tr>
+    </table>
+  </form>
+</div>
+<!-- 修改窗口 -->
+<div id="editDialog" style="padding: 10px">
+  <form id="editForm" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="id" id="edit_id">
+    <input type="hidden" name="status" id="edit_status">
+    <table cellpadding="8">
+      <tr>
+        <td>竞赛名称:</td>
+        <td><input id="edit_competitionName" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="competitionName"
+                   name="competitionName"/></td>
+
+        <td>证书:</td>
+      </tr>
+      <tr>
+        <td>学生名称:</td>
+        <td><input id="edit_studentName" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   name="studentName"
+                   validType="name"/></td>
+
+        <td rowspan="4">
+          <input id="edit_certificatePath" name="certificatePath" type="text" style="display: none">
+          <img id="edit_preview" style=" width: 100%; max-height: 200px; height: auto;"/>
+        </td>
+      </tr>
+      <tr>
+        <td>指导教师名称:</td>
+        <td>
+          <input id="edit_teacherName" class="easyui-textbox" style="width: 200px; height: 30px;" type="text"
+                 validType="name"
+                 name="teacherName"/></td>
+      </tr>
+      <tr>
+        <td>奖项:</td>
+        <td><input id="edit_result" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   name="result"/></td>
+      </tr>
+      <tr>
+        <td>参赛时间:</td>
+        <td><input id="edit_participationDate" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="date"
+                   name="participationDate"/></td>
+      </tr>
+    </table>
+  </form>
+</div>
+</body>
+</html>
+<script setup>
+</script>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport"
+		  content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+
+</head>
+<body>
+
+<div th:fragment="welcome">
+
+  <div title="欢迎使用" style="padding:20px;overflow:hidden; text-align: center; ">
+    <p style="font-size: 3vw; letter-spacing:1vw; line-height: 30px; height: 30px; color: #0e69a2">欢迎使用竞赛管理系统</p>
+    <p style="font-size: 2vw; letter-spacing:0.5vw;line-height: 60px; height: 60px; color: #29b1c4" th:text="${session.USERINFO.name}"></p>
+
+		<hr />
+    <p style="font-size: 1vw; letter-spacing:0.5vw;height: 3vh; margin-top: 3vh; color: #29b1c4">若系统存在问题请联系管理员</p>
+    <p style="font-size: 1vw; letter-spacing:0.5vw;height: 2vh; color: #29b1c4">双击标签可关闭标签</p>
+    <a class="easyui-linkbutton" style="color: #29b1c4;  margin-top: 45vh;" th:href="@{/logout}" id="loginOut">安全退出</a>
+	</div>
+</div>
+</body>
+</html>
+<script setup>
+</script>

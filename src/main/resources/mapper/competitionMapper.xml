@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hzu.competition_master.mapper.CompetitionMapper">
+
+    <!-- 多条件增加 -->
+    <insert id="addByCmp" parameterType="Competition">
+        INSERT INTO Competitions (CompetitionName, Description, StartDate, EndDate)
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="competitionName != null">#{competitionName},</if>
+            <if test="competitionName == null">null,</if>
+            <if test="description != null">#{description},</if>
+            <if test="description == null">null,</if>
+            <if test="startDate != null">#{startDate},</if>
+            <if test="startDate == null">null,</if>
+            <if test="endDate != null">#{endDate},</if>
+            <if test="endDate == null">null,</if>
+        </trim>
+    </insert>
+
+    <!-- 多条件删除 -->
+    <delete id="deleteByCmp" parameterType="Competition">
+        DELETE FROM Competitions
+        <where>
+            <if test="id != 0">AND ID = #{id}</if>
+            <if test="competitionName != null">AND CompetitionName = #{competitionName}</if>
+            <if test="description != null">AND Description = #{description}</if>
+            <if test="startDate != null">AND StartDate = #{startDate}</if>
+            <if test="endDate != null">AND EndDate = #{endDate}</if>
+        </where>
+    </delete>
+
+    <!-- 根据Id多条件更新 -->
+    <update id="updateById" parameterType="Competition">
+        UPDATE Competitions
+        <set>
+            <if test="competitionName != null">CompetitionName = #{competitionName},</if>
+            <if test="description != null">Description = #{description},</if>
+            <if test="startDate != null">StartDate = #{startDate},</if>
+            <if test="endDate != null">EndDate = #{endDate},</if>
+        </set>
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 多条件查询 -->
+    <select id="findByCmp" parameterType="Competition" resultType="Competition">
+        SELECT * FROM Competitions
+        <where>
+            <if test="id != 0">AND ID = #{id}</if>
+            <if test="competitionName != null">AND CompetitionName = #{competitionName}</if>
+            <if test="description != null">AND Description = #{description}</if>
+            <if test="startDate != null">AND StartDate = #{startDate}</if>
+            <if test="endDate != null">AND EndDate = #{endDate}</if>
+        </where>
+    </select>
+
+    <!-- 多条件模糊查询 -->
+    <select id="findByCmpLike" parameterType="Competition" resultType="Competition">
+        SELECT * FROM Competitions
+        <where>
+            <if test="id != 0">AND ID = #{id}</if>
+            <if test="competitionName != null">AND CompetitionName LIKE CONCAT('%', #{competitionName}, '%')</if>
+            <if test="description != null">AND Description LIKE CONCAT('%', #{description}, '%')</if>
+            <if test="startDate != null">AND StartDate LIKE CONCAT('%', #{startDate}, '%')</if>
+            <if test="endDate != null">AND EndDate LIKE CONCAT('%', #{endDate}, '%')</if>
+        </where>
+    </select>
+</mapper>

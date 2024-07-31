@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>竞赛列表</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/default/easyui.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/icon.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/css/demo.css}">
+  <script type="text/javascript" th:src="@{/easyui/jquery.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.easyui.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.serializejson.min.js}"></script>
+  <script type="text/javascript" th:src="@{/ajaxConfig.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/js/validateExtends.js}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    // 页面加载完成后进行初始化
+    $(function () {
+      //datagrid初始化
+      $('#dataList').datagrid({
+        title: '竞赛列表',
+        iconCls: 'icon-more', //图标
+        border: true,
+        collapsible: false, //是否可折叠的
+        fit: true, //自动大小
+        method: "get",
+        url: "[(@{/competition})]",
+        idField: 'id',
+        pagination: true, //分页控件
+        rownumbers: true, //显示行号
+        sortName: 'competitionName',
+        sortOrder: 'DESC',
+        remoteSort: false,
+        columns: [[
+          {field: 'chk', checkbox: true, width: 50},
+          {field: 'id', title: 'ID', width: 50, sortable: true, hidden: true},
+          {field: 'competitionName', title: '比赛名称', width: 200, sortable: true},
+          {field: 'description', title: '描述', width: 200, sortable: true},
+          {field: 'startDate', title: '开始日期', width: 150, sortable: true},
+          {field: 'endDate', title: '结束日期', width: 150, sortable: true}//
+        ]],
+        toolbar: "#toolbar",// 工具栏
+        onLoadSuccess: function () {// 重新请求时取消所有勾选
+          $("#dataList").datagrid("clearChecked");
+        }
+      });
+
+      //设置分页控件
+      $('#dataList').datagrid('getPager').pagination({
+        pageSize: 10,//每页显示的记录条数，默认为10
+        pageList: [10, 20, 30, 50, 100],//可以设置每页记录条数的列表
+        beforePageText: '第',//页数文本框前显示的汉字
+        afterPageText: '页    共 {pages} 页',
+        displayMsg: '当前显示 {from} - {to} 条记录   共 {total} 条记录'
+      });
+
+      //搜索按钮监听事件
+      $("#search-btn").click(function () {
+        $('#dataList').datagrid('load', {
+          competitionName: $('#search_competition_name').val(),
+          isLike: true
+        });
+      });
+
+      // 添加按钮点击事件设置
+      $("#add").click(function () {
+        $("#addDialog").dialog("open");
+      });
+
+      // 修改按钮点击事件设置
+      $("#edit").click(function () {
+        var selectRows = $("#dataList").datagrid("getSelections");
+        if (selectRows.length != 1) {
+          $.messager.alert("消息提醒", "请选择一条数据进行操作!", "warning");
+        } else {
+          $("#editDialog").dialog("open");
+        }
+      });
+
+      // 删除按钮点击事件设置
+      $("#delete").click(function () {
+        var selectRows = $("#dataList").datagrid("getSelections");
+        if (selectRows == 0) {
+          $.messager.alert("消息提醒", "请选择数据进行删除!", "warning");
+        } else {
+          $.messager.confirm("消息提醒", "将删除与竞赛相关的所有数据，确认继续？", function (r) {
+            var requestJson = [];
+            $.each(selectRows, function (i, n) {
+              let obj = {
+                id: n.id
+              };
+              requestJson.push(obj);
+            });
+            if (r) {
+              $.ajax({
+                type: "delete",
+                url: "[(@{/competition})]",
+                data: JSON.stringify(requestJson),
+                contentType: "application/json",
+                processData: false,
+                success: function () {
+                  $.messager.alert("消息提醒", "删除成功!", "info");
+                  //刷新表格
+                  $("#dataList").datagrid("reload");
+                  // 取消勾选
+                  $("#dataList").datagrid("clearChecked");
+                }
+              });
+            }
+          });
+        }
+      });
+
+      // 设置添加窗口
+      $("#addDialog").dialog({
+        title: "添加竞赛",
+        width: 650,
+        height: 460,
+        iconCls: "icon-add",
+        modal: true,
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        draggable: true,
+        closed: true,
+        buttons: [{
+          text: '添加',
+          plain: true,
+          iconCls: 'icon-user_add',
+          handler: function () {
+            if(!$("#addForm").form("validate")){
+              $.messager.alert("消息提醒","请检查你输入的数据!","warning");
+              return;
+            }
+            $.ajax({
+              type: "put",
+              url: "[(@{/competition})]",
+              data: JSON.stringify($("#addForm").serializeJSON()),
+              contentType: "application/json",
+              success: function () {
+                $.messager.alert("消息提醒", "添加成功!", "info");
+                // 关闭窗口
+                $("#addDialog").dialog("close");
+                // 清空原表格数据
+                $("#addForm").form("clear");
+                // 刷新表格数据
+                $('#dataList').datagrid("reload");
+                // 取消勾选
+                $("#dataList").datagrid("clearChecked");
+              }
+            });
+          }
+        },
+          {
+            text: '重置',
+            plain: true,
+            iconCls: 'icon-reload',
+            handler: function () {
+              $("#addForm").form("clear");
+            }
+          }]
+      });
+
+      // 设置修改窗口
+      $("#editDialog").dialog({
+        title: "修改竞赛信息",
+        width: 650,
+        height: 460,
+        iconCls: "icon-edit",
+        modal: true,
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        draggable: true,
+        closed: true,
+        buttons: [{
+            text: '确认修改',
+            plain: true,
+            iconCls: 'icon-user_add',
+            handler: function () {
+              if(!$("#editForm").form("validate")){
+                $.messager.alert("消息提醒","请检查你输入的数据!","warning");
+                return;
+              }
+              $.ajax({
+                type: "post",
+                url: "[(@{/competition})]",
+                data: JSON.stringify($("#editForm").serializeJSON()),
+                contentType: "application/json",
+                processData: false,
+                success: function () {
+                  $.messager.alert("消息提醒", "修改成功!", "info");
+                  // 关闭窗口
+                  $("#editDialog").dialog("close");
+                  // 清空表格数据
+                  $("#editForm").form("clear");
+                  // 刷新表格数据
+                  $("#dataList").datagrid("reload");
+                  // 取消勾选
+                  $("#dataList").datagrid("clearChecked");
+                }
+              });
+            }
+          },
+          {
+            text: '重置',
+            plain: true,
+            iconCls: 'icon-reload',
+            handler: function () {
+              // 清空表格数据
+              $("#editForm").form("clear");
+            }
+          }],
+        onBeforeOpen: function () {
+          // 加载原数据
+          var selectRow = $("#dataList").datagrid("getSelected");
+          $("#edit_id").val(selectRow.id);
+          $("#edit_competitionName").textbox('setValue', selectRow.competitionName);
+          $("#edit_description").textbox('setValue', selectRow.description);
+          $("#edit_startDate").textbox('setValue', selectRow.startDate);
+          $("#edit_endDate").textbox('setValue', selectRow.endDate);
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+<!-- 数据列表 -->
+<table id="dataList" cellspacing="0" cellpadding="0">
+
+</table>
+<!-- 工具栏 -->
+<div id="toolbar" style="display: flex; flex-direction: row; gap: 3px;">
+  <div th:if="${session.USERTYPE != 'STUDENT'}" style="float: left;">
+    <a id="add" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-add',plain:true">添加</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div th:if="${session.USERTYPE != 'STUDENT'}" style="float: left;">
+    <a id="delete" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-some-delete',plain:true">删除</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div th:if="${session.USERTYPE != 'STUDENT'}" style="float: left;">
+    <a id="edit" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-edit',plain:true">修改</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div style="float: left;margin-top:4px;">
+    &nbsp;&nbsp;竞赛名称：<input id="search_competition_name" class="easyui-textbox" name="search_competition_name"/>
+  </div>
+  <div style="margin-top:2px;">
+    <a id="search-btn" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-search',plain:true">搜索</a>
+  </div>
+</div>
+
+<!-- 添加窗口 -->
+<div id="addDialog" style="padding: 10px">
+  <form id="addForm" method="post" enctype="multipart/form-data">
+    <table cellpadding="8">
+      <tr>
+        <td>竞赛名称:</td>
+        <td><input id="add_competitionName" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="competitionName" name="competitionName"/></td>
+      </tr>
+      <tr>
+        <td>描述:</td>
+        <td><input id="add_description" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" name="description"/></td>
+      </tr>
+      <tr>
+        <td>开始日期:</td>
+        <td>
+          <input id="add_startDate" class="easyui-textbox" style="width: 200px; height: 30px;" type="text"  validType="date"
+                 name="startDate" />
+        </td>
+      </tr>
+      <tr>
+        <td>结束日期:</td>
+        <td>
+          <input id="add_endDate" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" name="endDate" validType="date"/>
+        </td>
+      </tr>
+    </table>
+  </form>
+</div>
+<!-- 修改窗口 -->
+<div id="editDialog" style="padding: 10px">
+  <form id="editForm" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="id" id="edit_id">
+    <table cellpadding="8">
+      <tr>
+        <td>竞赛名称:</td>
+        <td><input id="edit_competitionName" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="competitionName" name="competitionName" /></td>
+      </tr>
+      <tr>
+        <td>描述:</td>
+        <td><input id="edit_description" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" name="description"/></td>
+      </tr>
+      <tr>
+        <td>开始日期:</td>
+        <td>
+          <input id="edit_startDate" class="easyui-textbox" style="width: 200px; height: 30px;" type="text" validType="date" name="startDate" />
+        </td>
+      </tr>
+      <tr>
+        <td>结束日期:</td>
+        <td>
+          <input id="edit_endDate" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" name="endDate" validType="date"/>
+        </td>
+      </tr>
+    </table>
+  </form>
+</div>
+</body>
+</html>
+<script setup>
+</script>

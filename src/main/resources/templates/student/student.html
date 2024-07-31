@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>学生列表</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/default/easyui.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/icon.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/css/demo.css}">
+  <script type="text/javascript" th:src="@{/easyui/jquery.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.easyui.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.serializejson.min.js}"></script>
+  <script type="text/javascript" th:src="@{/ajaxConfig.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/js/validateExtends.js}"></script>
+  <script type="text/javascript" th:inline="javascript">
+
+    // 页面加载完成后进行初始化
+    $(function () {
+      //datagrid初始化
+      $('#dataList').datagrid({
+        title: '学生列表',
+        iconCls: 'icon-more', //图标
+        border: true,
+        collapsible: false, //是否可折叠的
+        fit: true, //自动大小
+        method: "get",
+        url: "[(@{/student})]",
+        idField: 'id',
+        pagination: true, //分页控件
+        rownumbers: true, //显示行号
+        sortName: 'name',
+        sortOrder: 'DESC',
+        remoteSort: false,
+        queryParams: {
+          studentName : "",
+          clazzName : ""
+        },
+        columns: [[
+          {field: 'chk', checkbox: true, width: 50},
+          {field: 'id', title: 'ID', width: 50, sortable: true, hidden: true},
+          {field: 'account', title: '账号', width: 200, sortable: true},
+          {field: 'name', title: '姓名', width: 200, sortable: true},
+          {field: 'number', title: '电话', width: 150, sortable: true},
+          {field: 'email', title: '邮箱', width: 150, sortable: true},
+          {field: 'clazzName', title: '班级', width: 150, sortable: true}//
+        ]],
+        toolbar: "#toolbar",// 工具栏
+        onLoadSuccess: function () {// 重新请求时取消所有勾选
+          $(this).datagrid("clearChecked");
+        }
+      });
+
+      //设置分页控件
+      $('#dataList').datagrid('getPager').pagination({
+        pageSize: 10,//每页显示的记录条数，默认为10
+        pageList: [10, 20, 30, 50, 100],//可以设置每页记录条数的列表
+        beforePageText: '第',//页数文本框前显示的汉字
+        afterPageText: '页    共 {pages} 页',
+        displayMsg: '当前显示 {from} - {to} 条记录   共 {total} 条记录'
+      });
+
+      // 搜索班级下拉框
+      $("#clazzList").combobox({
+        valueField: "clazzName",
+        textField: "clazzName",
+        method: "get",
+        url: "[(@{/clazz(from=combox)})]",
+        mode: "remote",
+        queryParams: {
+          isLike: true
+        }
+      });
+
+      //搜索按钮监听事件
+      $("#search-btn").click(function () {
+        $('#dataList').datagrid('load', {
+          studentName: $('#search_student_name').val(),
+          clazzName: $("#clazzList").combobox('getValue'),
+        });
+      });
+
+      // 添加按钮点击事件设置
+      $("#add").click(function () {
+        $("#addDialog").dialog("open");
+      });
+
+      // 修改按钮点击事件设置
+      $("#edit").click(function () {
+        var selectRows = $("#dataList").datagrid("getSelections");
+        if (selectRows.length != 1) {
+          $.messager.alert("消息提醒", "请选择一条数据进行操作!", "warning");
+        } else {
+          $("#editDialog").dialog("open");
+        }
+      });
+
+      // 删除按钮点击事件设置
+      $("#delete").click(function () {
+        var selectRows = $("#dataList").datagrid("getSelections");
+        if (selectRows == 0) {
+          $.messager.alert("消息提醒", "请选择数据进行删除!", "warning");
+        } else {
+          $.messager.confirm("消息提醒", "将删除与学生相关的所有数据，确认继续？", function (r) {
+            var requestJson = [];
+            $.each(selectRows, function (i, n) {
+              let obj = {
+                id: n.id
+              };
+              requestJson.push(obj);
+            });
+            if (r) {
+              $.ajax({
+                type: "delete",
+                url: "[(@{/student})]",
+                data: JSON.stringify(requestJson),
+                contentType: "application/json",
+                processData: false,
+                success: function () {
+                  $.messager.alert("消息提醒", "删除成功!", "info");
+                  //刷新表格
+                  $("#dataList").datagrid("reload");
+                  // 取消勾选
+                  $("#dataList").datagrid("clearChecked");
+                }
+              });
+            }
+          });
+        }
+      });
+
+      // 设置添加窗口
+      $("#addDialog").dialog({
+        title: "添加学生",
+        width: 650,
+        height: 460,
+        iconCls: "icon-add",
+        modal: true,
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        draggable: true,
+        closed: true,
+        buttons: [{
+          text: '添加',
+          plain: true,
+          iconCls: 'icon-user_add',
+          handler: function () {
+            var validate = $("#addForm").form("validate");
+            if(!validate){
+              $.messager.alert("消息提醒","请检查你输入的数据!","warning");
+              return;
+            }
+            $.ajax({
+              type: "put",
+              url: "[(@{/student})]",
+              data: JSON.stringify($("#addForm").serializeJSON()),
+              contentType: "application/json",
+              success: function () {
+                $.messager.alert("消息提醒", "添加成功!", "info");
+                // 关闭窗口
+                $("#addDialog").dialog("close");
+                // 清空原表格数据
+                $("#addForm").form("clear");
+                // 刷新表格数据
+                $('#dataList').datagrid("reload");
+                // 取消勾选
+                $("#dataList").datagrid("clearChecked");
+              }
+            });
+          }
+        },
+          {
+            text: '重置',
+            plain: true,
+            iconCls: 'icon-reload',
+            handler: function () {
+              $("#addForm").form("clear");
+            }
+          }],
+        onBeforeOpen: function () {
+          // 添加班级下拉框
+          $("#add_clazzName").combobox({
+            width: "200",
+            height: "30",
+            valueField: "clazzName",
+            textField: "clazzName",
+            method: "get",
+            url: "[(@{/clazz(from=combox)})]",
+            mode: "remote",
+            queryParams: {
+              isLike: true
+            }
+          });
+        }
+      });
+
+      // 设置修改窗口
+      $("#editDialog").dialog({
+        title: "修改学生信息",
+        width: 650,
+        height: 460,
+        iconCls: "icon-edit",
+        modal: true,
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        draggable: true,
+        closed: true,
+        buttons: [{
+            text: '确认修改',
+            plain: true,
+            iconCls: 'icon-user_add',
+            handler: function () {
+              if(!$("#editForm").form("validate")){
+                $.messager.alert("消息提醒","请检查你输入的数据!","warning");
+                return;
+              }
+              $.ajax({
+                type: "post",
+                url: "[(@{/student})]",
+                data: JSON.stringify($("#editForm").serializeJSON()),
+                contentType: "application/json",
+                processData: false,
+                success: function () {
+                  $.messager.alert("消息提醒", "修改成功!", "info");
+                  // 关闭窗口
+                  $("#editDialog").dialog("close");
+                  // 清空表格数据
+                  $("#editForm").form("clear");
+                  // 刷新表格数据
+                  $("#dataList").datagrid("reload");
+                  // 取消勾选
+                  $("#dataList").datagrid("clearChecked");
+                }
+              });
+            }
+          },
+          {
+            text: '重置',
+            plain: true,
+            iconCls: 'icon-reload',
+            handler: function () {
+              // 清空表格数据
+              $("#editForm").form("clear");
+            }
+          }],
+        onBeforeOpen: function () {
+          // 添加班级下拉框
+          $("#edit_clazzName").combobox({
+            width: "200",
+            height: "30",
+            valueField: "clazzName",
+            textField: "clazzName",
+            method: "get",
+            url: "[(@{/clazz(from=combox)})]",
+            mode: "remote",
+            queryParams: {
+              isLike: true
+            }
+          });
+          // 加载原数据
+          var selectRow = $("#dataList").datagrid("getSelected");
+          $("#edit_id").val(selectRow.id);
+          $("#edit_account").textbox('setValue', selectRow.account);
+          $("#edit_password").textbox('setValue', selectRow.password);
+          $("#edit_name").textbox('setValue', selectRow.name);
+          $("#edit_clazzName").combobox('select', selectRow.clazzName);
+          $("#edit_number").textbox('setValue', selectRow.number);
+          $("#edit_email").textbox('setValue', selectRow.email);
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+<!-- 数据列表 -->
+<table id="dataList" cellspacing="0" cellpadding="0">
+
+</table>
+<!-- 工具栏 -->
+<div id="toolbar" style="display: flex; flex-direction: row; gap: 3px;">
+  <div style="float: left;">
+    <a id="add" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-add',plain:true">添加</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div style="float: left;">
+    <a id="delete" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-some-delete',plain:true">删除</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div style="float: left;">
+    <a id="edit" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-edit',plain:true">修改</a>
+  </div>
+  <div style="float: left;" class="datagrid-btn-separator"></div>
+  <div style="float: left;margin-top:4px;">
+    &nbsp;&nbsp;姓名：<input id="search_student_name" class="easyui-textbox" name="search_student_name"/>
+  </div>
+  <div style="float: left;margin-top:4px;">
+    &nbsp;&nbsp;班级：<input id="clazzList" class="easyui-textbox" name="clazz"/>
+  </div>
+  <div style="margin-top:2px;">
+    <a id="search-btn" href="javascript:;" class="easyui-linkbutton"
+       data-options="iconCls:'icon-search',plain:true">搜索</a>
+  </div>
+</div>
+
+<!-- 添加窗口 -->
+<div id="addDialog" style="padding: 10px">
+  <form id="addForm" method="post" enctype="multipart/form-data">
+    <table cellpadding="8">
+      <tr>
+        <td>账号:</td>
+        <td><input id="add_account" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="account"
+                   name="account"  data-options="required:true, missingMessage:'请填写账号'"/></td>
+      </tr>
+      <tr>
+        <td>姓名:</td>
+        <td><input id="add_name" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" name="name" validType="name"
+                   data-options="required:true, missingMessage:'请填写姓名'"/></td>
+      </tr>
+      <tr>
+        <td>密码:</td>
+        <td>
+          <input id="add_password" class="easyui-textbox" style="width: 200px; height: 30px;" type="password" validType="password"
+                 name="password" data-options="required:true, missingMessage:'请填写密码'"/>
+        </td>
+      </tr>
+      <tr>
+        <td>班级:</td>
+        <td><input id="add_clazzName" style="width: 200px; height: 30px;" class="easyui-textbox" name="clazzName"
+                   data-options="required:true, missingMessage:'请填写班级'"/></td>
+      </tr>
+      <tr>
+        <td>电话:</td>
+        <td><input id="add_number" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="number"
+                   name="number"/></td>
+      </tr>
+      <tr>
+        <td>邮箱:</td>
+        <td><input id="add_email" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="email"
+                   name="email"/>
+        </td>
+      </tr>
+    </table>
+  </form>
+</div>
+<!-- 修改学生窗口 -->
+<div id="editDialog" style="padding: 10px">
+  <form id="editForm" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="id" id="edit_id">
+    <table cellpadding="8">
+      <tr>
+        <td>账号:</td>
+        <td><input id="edit_account" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="account"
+                   name="account"
+                   data-options="required:true, missingMessage:'请填写账号'"/></td>
+      </tr>
+      <tr>
+        <td>姓名:</td>
+        <td><input id="edit_name" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="name"
+                   name="name"
+                   data-options="required:true, missingMessage:'请填写姓名'"/>
+        </td>
+      </tr>
+      <tr>
+        <td>密码:</td>
+        <td><input id="edit_password" style="width: 200px; height: 30px;" class="easyui-textbox" type="password" validType="password"
+                   name="password"/></td>
+      </tr>
+      <tr>
+        <td>班级:</td>
+        <td><input id="edit_clazzName" style="width: 200px; height: 30px;" class="easyui-textbox" name="clazzName"/>
+        </td>
+      </tr>
+      <tr>
+        <td>电话:</td>
+        <td><input id="edit_number" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="number"
+                   name="number"/></td>
+      </tr>
+      <tr>
+        <td>邮箱:</td>
+        <td><input id="edit_email" style="width: 200px; height: 30px;" class="easyui-textbox" type="text" validType="email"
+                   name="email"/>
+        </td>
+      </tr>
+    </table>
+  </form>
+</div>
+</body>
+</html>
+<script setup>
+</script>

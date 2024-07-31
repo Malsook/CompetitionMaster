@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>学生列表</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/default/easyui.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/icon.css}">
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/css/demo.css}">
+  <script type="text/javascript" th:src="@{/easyui/jquery.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.easyui.min.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/jquery.serializejson.min.js}"></script>
+  <script type="text/javascript" th:src="@{/ajaxConfig.js}"></script>
+  <script type="text/javascript" th:src="@{/easyui/js/validateExtends.js}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    var userInfo = [[${session.USERINFO}]];
+    // 页面加载完成后进行初始化
+    $(function () {
+
+      // 设置修改窗口
+      $("#editDialog").dialog({
+        maximized: true,
+        noheader: true,
+        border: false,
+        width: 650,
+        height: 460,
+        iconCls: "icon-edit",
+        modal: true,
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        draggable: true,
+        closed: true,
+        onBeforeOpen: function () {
+          $("#edit_id").val(userInfo.id);
+          $("#edit_account").textbox('setValue', userInfo.account);
+          $("#edit_password").textbox('setValue', userInfo.password);
+          $("#edit_name").textbox('setValue', userInfo.name);
+          $("#edit_number").textbox('setValue', userInfo.number);
+          $("#edit_email").textbox('setValue', userInfo.email);
+          // 添加按钮点击事件设置
+          $("#submitUpdate").click(function () {
+            if ($('#editForm').form('validate')) {
+              $.ajax({
+                type: "post",
+                url: "[(@{/teacher})]",
+                data: JSON.stringify($("#editForm").serializeJSON()),
+                contentType: "application/json",
+                processData: false,
+                success: function (data) {
+                  $.messager.alert("消息提醒", "修改成功!", "info");
+                  // 刷新表格数据
+                  $('#button1').trigger('click');
+                }
+              });
+            }
+          });
+
+          // 添加按钮点击事件设置
+          $("#resetInfo").click(function () {
+            $.ajax({
+              type: "get",
+              url: "[(@{/teacher})]",
+              data: {
+                id : userInfo.id,
+                teacherName: ""
+              },
+              success: function (data) {
+                data.rows[0]["teacherName"] = data.rows[0]["name"];
+                // 清空表格数据
+                $('#editForm').form('load', data.rows[0]);
+              }
+            });
+          });
+        }
+      });
+      $("#editDialog").dialog("open");
+    })
+    ;
+  </script>
+</head>
+
+<body>
+<!-- 修改学生窗口 -->
+<div id="editDialog" style="padding: 10px">
+  <form id="editForm" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="id" id="edit_id">
+    <table cellpadding="8">
+      <tr>
+        <td>账号:</td>
+        <td><input id="edit_account" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="account" name="account" /></td>
+      </tr>
+      <tr>
+        <td>姓名:</td>
+        <td><input id="edit_name" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="name" name="teacherName" />
+        </td>
+      </tr>
+      <tr>
+        <td>密码:</td>
+        <td><input id="edit_password" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="password" name="password"/></td>
+      </tr>
+      <tr>
+        <td>电话:</td>
+        <td><input id="edit_number" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="number" name="number"/></td>
+      </tr>
+      <tr>
+        <td>邮箱:</td>
+        <td><input id="edit_email" style="width: 200px; height: 30px;" class="easyui-textbox" type="text"
+                   validType="email" name="email"/>
+        </td>
+      </tr>
+      <tr>
+        <td><a id="submitUpdate" href="javascript:;" class="easyui-linkbutton"
+               data-options="iconCls:'icon-edit',plain:true">提交修改</a></td>
+        <td><a id="resetInfo" href="javascript:;" class="easyui-linkbutton"
+               data-options="iconCls:'icon-edit',plain:true">重置信息</a></td>
+      </tr>
+    </table>
+  </form>
+</div>
+</body>
+</html>
+<script setup>
+</script>
