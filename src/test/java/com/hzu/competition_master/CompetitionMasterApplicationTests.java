@@ -32,15 +32,7 @@ class CompetitionMasterApplicationTests {
     DataSource dataSource;
     @Test
     void contextLoads() {
-        int number = 2;
-        String message = switch (number) {
-            case 1, 2, 3 -> "Small number";
-            case 4, 5, 6 -> "Medium number";
-            default -> {
-                yield "Large number";
-            }
-        };
-        System.out.println(message); // 输出: Large number
+        System.out.println(System.getProperty("user.dir")); // 输出: Large number
     }
     @Test
     void clazzMapperTest() {

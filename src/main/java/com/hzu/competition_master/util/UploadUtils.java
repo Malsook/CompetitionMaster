@@ -17,7 +17,7 @@ public class UploadUtils {
         // 获取文件名
         String fileName = StringUtils.getFileName(file);
         // 保存文件
-        file.transferTo(new File("C:\\Users\\11987\\Desktop\\CompetitionMaster\\src\\main\\resources\\static\\certificatePicture\\", fileName));
+        file.transferTo(new File(System.getProperty("user.dir") + "\\src\\main\\resources\\static\\certificatePicture\\", fileName));
         return "certificatePicture/" + fileName;
     }
 }
